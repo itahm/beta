@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>@ ITAhM</title>
+
+		<style>
+@import "css/itahm.css";
+
+.resource {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+section {
+	padding: 10px;
+	border: 1px solid #0084ff;
+	border-radius: 5px;
+}
+
+body> section {
+	margin-top: 10px;
+}
+
+#responseTime {
+	display: inline-block;
+}
+
+.proc_mem {
+	display: flex;
+	margin-top: 10px;
+}
+
+.proc_mem section:last-child {
+	margin-left: 10px;
+	flex: 1;
+}
+
+.processor {
+	margin: 10px;
+}
+
+.memory .bar {
+	display: flex;
+	width: 80px;
+	height: 100px;
+	justify-content: center;
+	align-items: center;
+	border: 1px solid #999;
+	border-radius: 10px;
+	position: relative;
+	overflow: hidden;
+}
+
+.memory .color {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	background-color: #b8860b;
+	z-index: -1;
+}
+
+.memory {
+	display: flex;
+}
+
+.memory,
+.memory ul {
+	list-style: none;
+	margin: 0; padding: 0;
+}
+
+.memory ul li {
+	margin: .5em;
+}
+
+/* storage 영역 css */
+#storage,
+#storage ul {
+	list-style: none;
+	padding: 0;
+}
+
+#storage ul {
+	display: flex;
+}
+
+#storage ul> li {
+	text-align: center;
+	padding: .5em; margin: 3px;
+	flex: 1;
+}
+
+#storage .title {
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 3px;
+}
+
+#storage .title .usage {
+	flex: 2;
+}
+
+#storage .title li {
+	font-weight: bold;
+}
+
+#storage .bar {
+	position: relative;
+	border: 1px solid #999;
+	box-sizing: border-box;
+}
+
+#storage .color {
+	position: absolute; top: 0; left: 0;
+	height: 100%;
+	z-index: -1;
+	background-color: #9d9789;
+}
+/**/
+
+/* interface 영역 css */
+#iFace {
+	width: 100%;
+}
+
+#iFace,
+#iFace ul {
+	list-style: none;
+	padding: 0;
+}
+
+#iFace ul {
+	display: flex;
+}
+
+#iFace ul> li {
+	text-align: center;
+	padding: .5em; margin: 3px;
+	flex: 1;
+}
+
+#iFace .title {
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 3px;
+}
+
+#iFace .title .input,
+#iFace .title .output {
+	flex: 2;
+}
+
+#iFace .title li {
+	font-weight: bold;
+}
+
+#iFace .bar {
+	position: relative;
+	border: 1px solid #999;
+	box-sizing: border-box;
+}
+
+#iFace .color {
+	position: absolute; top: 0; left: 0;
+	height: 100%;
+	z-index: -1;
+}
+
+#iFace .color.input {
+	background-color: #7d7;
+}
+
+#iFace .color.output {
+	background-color: #f60;
+}
+
+/**/
+
+.layout {
+	display: none;
+}
+
+#status {
+	color: #0084ff;
+}
+
+#status.down {
+	color: #f00;
+}
+
+#processor:hover,
+#memory:hover,
+#responseTime:hover,
+li.storage:hover,
+li.i_face:hover {
+	outline: solid 3px #0084ff;
+	cursor: pointer;
+}
+
+#memory {
+	display: inline-block;
+	padding: 10px;
+}
+
+		</style>
+	</head>
+
+	<body class="loading">
+		
+		<header>
+			<h3 id="status"></h3>
+		</header>
+		
+		<section>
+			<h2 id="responseTime">Response time : <span id="response_time"></span></h2>
+		</section>
+		<div class="proc_mem">
+			<section>
+				<h2>Processor load</h2>
+				<div class="resource" id="processor"></div>
+			</section>
+			<section>
+				<h2>Physical memory</h2>
+				<div class="resource" id="memory"></div>
+			</section>
+		</div>
+		
+		<section>
+			<h2>Storage usage</h2>
+			<ul id="storage">
+				<li class="title">
+					<ul>
+						<li>storage label
+						<li>size
+						<li class="usage">used
+					</ul>
+			</ul>
+		</section>
+	
+		<section>
+			<h2>Interface throughput</h2>
+			<ul id="iFace">
+				<li class="title">
+					<ul>
+						<li>interface name
+						<li>bandwidth
+						<li class="input">input
+						<li class="output">output
+					</ul>
+			</ul>
+		</section>
+		
+		<div class="layout">
+			<canvas width="100" height="100" class="processor"></canvas>
+			
+			<ul class="memory">
+				<li class="bar">
+					<span class="label"></span>
+					<div class="color"></div>
+				<li>
+					<ul>
+						<li>capacity
+						<li>value
+						<li>used
+						<li>value
+					</ul>
+			</ul>
+			
+			<ul>
+				<li class="storage">
+					<ul>
+						<li>
+						<li>
+						<li>
+						<li class="bar">
+							<span class="label"></span>
+							<div class="color"></div>
+					</ul>
+			</ul>
+			
+			<ul>
+				<li class="i_face">
+					<ul>
+						<li>
+						<li>
+						<li>
+						<li class="bar">
+							<span class="label"></span>
+							<div class="color input"></div>
+						<li>
+						<li class="bar">
+							<span class="label"></span>
+							<div class="color output"></div>
+					</ul>
+			</ul>
+		</div>
+		
+		<div class="bg_loading"></div>
+	</body>
+	
+	<script src="js/ITAhM.js"></script>
+	<script>
+
+	var processorArea = document.getElementById("processor"),
+		storageArea = document.getElementById("storage"),
+		memoryArea = document.getElementById("memory"),
+		interfaceArea = document.getElementById("iFace"),
+		gauge = document.querySelector(".gauge"),
+		processorGauge = document.querySelector(".processor"),
+		memoryGauge = document.querySelector(".memory"),
+		storageGauge = document.querySelector(".storage"),
+		iFaceGauge = document.querySelector(".i_face");
+	
+	document.getElementById("responseTime").onclick = function () {
+		onSelectResource("responseTime");
+	}
+	
+	function createProcGauge(value) {
+		var clone = processorGauge.cloneNode(true),
+			ctx = clone.getContext("2d"),
+			origin = Math.PI *1.5,
+			x = clone.width /2,
+			y = clone.height /2,
+			r = Math.min(x, y);
+
+		ctx.beginPath();
+		ctx.arc(x, y, r, 0, 2* Math.PI);
+		ctx.fillStyle = "#ffe63b";
+		ctx.fill();
+		
+		ctx.beginPath();
+		ctx.moveTo(x, y);
+		ctx.lineTo(x, 0);
+		ctx.arc(x, y, r, origin, origin + 2* Math.PI * value /100);
+		ctx.closePath();
+
+		ctx.fillStyle = "#e60000";
+		ctx.fill();
+		
+		ctx.fillStyle = "#000";
+		ctx.font = "10pt arial";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle"; 
+		ctx.fillText(value +"%", x, y);
+		
+		return clone;
+	}
+	
+	function createMemoryGuage(used, size) {
+		var clone = memoryGauge.cloneNode(true),
+			bar = clone.children[0],
+			info = clone.children[1].children[0];
+
+		bar.children[0].textContent
+		= bar.children[1].style.height
+		= Math.round(100* used / size) +"%";
+		
+		info.children[1].textContent = ITAhM.util.toBytesString(size);
+		info.children[3].textContent = ITAhM.util.toBytesString(used);
+		
+		return clone;
+	}
+	
+	function createStorageGuage(used, size, label) {
+		var clone = storageGauge.cloneNode(true),
+			ul = clone.children[0];
+		
+		ul.children[0].textContent = label;
+		ul.children[1].textContent = ITAhM.util.toBytesString(size);
+		ul.children[2].textContent = ITAhM.util.toBytesString(used);
+		
+		ul.children[3].children[0].textContent
+		= ul.children[3].children[1].style.width
+		= (100* used / size).toFixed(2) +"%";
+		
+		return clone;
+	}
+	
+	function createIFaceGuage(name, bandwidth, inBPS, outBPS) {
+		var clone = iFaceGauge.cloneNode(true),
+			ul = clone.children[0];
+		
+		ul.children[0].textContent = name;
+		ul.children[1].textContent = ITAhM.util.toBPSString(bandwidth);
+		ul.children[2].textContent = ITAhM.util.toBPSString(inBPS);
+		ul.children[4].textContent = ITAhM.util.toBPSString(outBPS);
+		
+		ul.children[3].children[0].textContent
+		= ul.children[3].children[1].style.width
+		= (100* inBPS / bandwidth).toFixed(2) +"%";
+		
+		
+		ul.children[5].children[0].textContent
+		= ul.children[5].children[1].style.width
+		= (100* outBPS / bandwidth).toFixed(2) +"%";
+		
+		return clone;
+	}
+	
+	function initialize(device, snmp) {
+		var entry;
+		
+		entry = snmp.hrProcessorEntry;
+		for (var index in entry) {
+			initProcessor(entry[index]);
+		}
+		
+		window.processorArea.onclick = function () {
+			onSelectResource("processor");
+		};
+		
+		entry = snmp.hrStorageEntry;
+		for (var index in entry) {
+			parseStorage(entry[index], index);
+		}
+		
+		entry = snmp.ifEntry;
+		for (var index in entry) {
+			initIFace(entry[index]).onclick = onSelectResource.bind(undefined, "throughput", index);
+		}
+		
+		if (device.shutdown) {
+			var status = document.getElementById("status");
+			
+			status.textContent
+				= "Last response "+ new Date(snmp.lastResponse).toLocaleString();
+			status.className = "down";
+		}
+		
+		document.getElementById("response_time").textContent = snmp.responseTime +"ms.";
+		
+		document.body.classList.remove("loading");
+	}
+	
+	function initProcessor(load) {
+		processorArea.appendChild(createProcGauge(load));
+	}
+	
+	function parseStorage(storage, index) {
+		switch(storage.hrStorageType) {
+		case 4:
+			if (storage.hrStorageSize > 0) {
+				initStorage(storage).onclick = function () {
+					onSelectResource("storage", index);
+				};
+			}
+			
+			break;
+		case 2:
+			initMemory(storage);
+			window.memoryArea.onclick = function () {
+				onSelectResource("memory", index);
+			};
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	function initStorage(storage) {
+		return storageArea.appendChild(
+			createStorageGuage(storage.hrStorageUsed * storage.hrStorageAllocationUnits
+				, storage.hrStorageSize * storage.hrStorageAllocationUnits, storage.hrStorageDescr));
+	}
+	
+	function initMemory(memory) {
+		var used = memory.hrStorageUsed * memory.hrStorageAllocationUnits,
+			size = memory.hrStorageSize * memory.hrStorageAllocationUnits;
+		
+		memoryArea.appendChild(createMemoryGuage(used, size));
+	}
+	
+	function initIFace(iFace) {
+		var bandwidth = iFace.ifSpeed;
+		
+		if (bandwidth > 0) {
+			var inBPS = iFace.ifInBPS || 0,
+				outBPS = iFace.ifOutBPS || 0;
+			
+			return interfaceArea.appendChild(createIFaceGuage(iFace.ifName, bandwidth, inBPS, outBPS));
+		}
+		
+		return document.createElement("div");
+	}
+	
+	// abstract
+	function onSelectResource(resource, index) {
+	}
+	
+	</script>
+</html>

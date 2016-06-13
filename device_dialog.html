@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>dialog</title>
+		
+		<style>
+@import "css/itahm.css";
+
+body {
+	position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(0, 0, 0, .8);
+}
+
+form {
+	width: 300px;
+	padding: 20px;
+	background-color: #fff;
+	/*box-shadow: 0px 0px 20px 10px #ddd;*/
+}
+
+.table {
+	margin-bottom: 5px;
+}
+
+.table ul {
+	list-style: none;
+	padding: 0; margin: 3px 0;
+	display: flex;
+	align-items: center;
+}
+
+.table li {
+	flex: 1;
+}
+
+.table li:first-child {
+	padding: .5em;
+	text-align: right;
+}
+
+.table li:last-child {
+	flex: 3;
+}
+
+.table li input[type="text"],
+.table li select {
+	padding: .5em;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+	margin: .5em;
+	vertical-align: middle;
+}
+
+.snmp:not(:checked) ~span.on,
+.snmp:checked ~span.off {
+	display: none;
+}
+
+.snmp[disabled] ~span {
+	color: #aaa;
+}
+
+.address {
+	display: flex;
+	align-items: flex-end;
+}
+
+.address input {
+	flex: 1;
+	text-align: right;
+}
+
+.hide {
+	display: none;
+}
+
+#profile:hover {
+	cursor: default;
+	text-decoration: underline;
+}
+
+footer {
+	margin-top: 5px;
+	display: flex;
+}
+
+footer input {
+	flex: 1;
+	padding: .5em;
+}
+
+		</style>
+		
+	</head>
+	
+	<body>
+	
+		<form class="rounded">
+			<h2>device</h2>
+			<div class="table">
+				<ul>
+					<li>ip address
+					<li class="address">
+						<input type="text" pattern="25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?" title="0 ~ 255" required id="ip1" autofocus>.
+						<input type="text" pattern="25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?" title="0 ~ 255" required id="ip2">.
+						<input type="text" pattern="25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?" title="0 ~ 255" required id="ip3">.
+						<input type="text" pattern="25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?" title="0 ~ 255" required id="ip4">
+				</ul>
+				<ul>
+					<li>name
+					<li>
+						<input type="text" name="name" placeholder="device name">
+				</ul>
+				<ul>
+					<li>type
+					<li>
+						<select name="type" required></select>
+					
+				</ul>
+				<ul>
+					<li>label
+					<li>
+						<input type="text" name="label" placeholder="separated by commas">
+					
+				</ul>
+				<ul>
+					<li>snmp
+					<li>
+						<label>
+							<input type="checkbox" name="snmp" class="snmp" disabled>
+							<span class="on">on</span><span class="off">off</span>
+						</label>
+					
+				</ul>
+				<label>
+					<input type="checkbox" id="remove" disabled>
+					remove
+				</label>
+			</div>
+			
+			<footer>
+				<input type="reset" class="r_button" value="Cancel">
+				<input type="submit" class="r_button" value="Apply">
+			</footer>
+		</form>
+		
+		<script>
+
+if (window === top) throw "";
+
+var form = document.querySelector("form");
+	
+(function (window, undefined){
+	form.elements.type.appendChild(buildType());
+	
+	form.addEventListener("reset", onCancel);
+	
+	if (sessionStorage.level == 0) {
+		form.addEventListener("submit", onApply);
+	}
+	else {
+		document.querySelector("input[type=submit]").disabled = true;
+	}
+	
+	function buildType() {
+		var df = document.createDocumentFragment(),
+			groupName, optgroup, option,
+			iconData = {},
+			group = {},
+			icon, data, type;
+		
+		data = top.databases.icon.origin;
+		for (type in data) {
+			iconData[type] = data[type];
+		}
+		
+		data = top.databases.icon.data;
+		for (type in data) {
+			iconData[type] = data[type];
+		}
+		
+		for (type in iconData) {
+			icon = iconData[type];
+			
+			groupName = icon.group;
+			
+			optgroup = group[groupName];
+			
+			if (!optgroup) {
+				optgroup = document.createElement("optgroup");
+				optgroup.label = groupName;
+				
+				group[groupName] = optgroup;
+				
+				df.appendChild(optgroup);
+			}
+			
+			optgroup.appendChild(document.createElement("option")).text = type;
+		}
+		
+		return df;
+	}
+	
+	function onApply(e) {
+		e.preventDefault();
+		
+		var ip = [form.elements.ip1.value, form.elements.ip2.value, form.elements.ip3.value, form.elements.ip4.value].join(".");
+		
+		if (!window.device) {
+			if (ip in top.databases.device.data) {
+				alert("IP address already exists.");
+				
+				form.elements.ip1.select();
+				
+				return;
+			}
+			
+			window.device = {
+				x: 0,
+				y: 0,
+				ifEntry: {}
+			};
+			
+			top.databases.device.data[ip] = device;
+		}
+		
+		device.name = form.elements.name.value;
+		device.ip = ip;
+		device.type = form.elements.type.value;
+		device.label = form.elements.label.value.split(",").map(function (value) {
+			return value.trim();
+		}).join(",");
+		
+		//등록된 장비이면
+		if ("snmp" in device) {
+			// true인 것은 true나 false 모두 가능
+			if (device.snmp) {
+				device.snmp = form.elements.snmp.checked;
+			}
+			// false인 것은 변경하지 않거나 제거 가능 (true 불가)
+			else if (form.elements.snmp.checked){
+				delete device.snmp;
+			}
+		}
+		//else 등록 전 장비이면 snmp 없음
+		
+		top.closeDialog();
+	}
+	
+	function onCancel(e) {
+		top.closeDialog(true);
+	}
+	
+	function onRemoveDevice() {
+		delete top.databases.device.data[device.ip];
+		
+		top.closeDialog();
+	}
+	
+	window.initialize = function (device) {	
+		if (device) {
+			window.device = device;
+			
+			form.elements.name.value = device.name;
+			
+			var ipArray = device.ip.split(".");
+			
+			form.elements.ip1.value = ipArray[0];
+			form.elements.ip1.disabled = true;
+			form.elements.ip2.value = ipArray[1];
+			form.elements.ip2.disabled = true;
+			form.elements.ip3.value = ipArray[2];
+			form.elements.ip3.disabled = true;
+			form.elements.ip4.value = ipArray[3];
+			form.elements.ip4.disabled = true;
+			
+			if (sessionStorage.level == 0) {
+				form.elements.remove.onclick = onRemoveDevice;
+				form.elements.remove.disabled = false;
+			}
+			
+			form.elements.type.value = device.type;
+			// 저장할때는 trim으로 다 붙여서 넣지만 보여줄때는 보기 좋게 한칸씩 띈다.
+			form.elements.label.value = device.label && (device.label.split(",")).join(", ") || "";
+			
+			if ("snmp" in device) {
+				form.elements.snmp.checked = device.snmp;
+				form.elements.snmp.disabled = false;
+			}
+		}
+		else {
+			form.elements.type.value="unknown";
+		}
+	};
+	
+}) (window);
+
+		</script>
+	
+	</body>
+	
+</html>

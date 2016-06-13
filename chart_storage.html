@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="Content-Script-Type" content="text/javascript">
+		<meta http-equiv="Content-Style-Type" content="text/css">
+		<title>ITAhM</title>
+		
+		<style>
+		
+@import "css/itahm.css";
+@import "css/chart.css";
+
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<header>
+			<h2 id="storage_name"></h2>
+		</header>
+		
+		<iframe id="chart" class="chart"></iframe>
+		
+		<script src="js/ITAhM.js"></script>	
+		<script src="js/object.js"></script>
+		<script>
+
+var chart = document.getElementById("chart"),
+	deviceIP = top.databases.device.selected,
+	resourceIndex = top.databases.device.resourceIndex,
+	snmp = top.databases.snmp;
+
+if(!deviceIP || !snmp) {
+	throw "!";
+}
+
+(function (date) {
+	date.setHours(0, 0, 0, 0);
+	
+	window.today = date.getTime();
+	window.end = date.setDate(date.getDate() +1);
+	window.start = date.setMonth(date.getMonth() -1);
+})(new Date());
+
+function initialize() {
+	var entry = snmp.hrStorageEntry[resourceIndex];
+	
+	window.max = entry.hrStorageSize * entry.hrStorageAllocationUnits;
+	
+	top.sendRequest({
+		command: "query",
+		ip: window.deviceIP,
+		summary: true,
+		database: "hrStorageUsed",
+		index: resourceIndex,
+		start: window.start,
+		end: window.end
+	}, onResponse);
+	
+	document.getElementById("storage_name").textContent = entry.hrStorageDescr;
+	
+	setHeader("Storage Usage", "Storage volume : "+ ITAhM.util.toBytesString(max));
+}
+
+function onResponse(data) {
+	chart.onload = function () {
+		var chartWindow = this.contentWindow;
+		
+		chartWindow.onValueToString = onValueToString;
+		
+		chartWindow.initialize(new ITAhM.ChartSummaryData(data), window.max, "#9d9789");
+		chartWindow.draw(window.today, window.end);
+	};
+	
+	chart.src="chart_base.html";
+}
+
+function onValueToString(value) {
+	return ITAhM.util.toBytesString(value).replace("ytes", "");
+}
+
+function onResetDate(start, end) {
+	window.chart.contentWindow.draw(start, end);
+}
+
+		</script>
+	
+	</body>
+	
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="Content-Script-Type" content="text/javascript">
+		<meta http-equiv="Content-Style-Type" content="text/css">
+		<title>ITAhM</title>
+		
+		<style>
+
+@import url("css/itahm.css");
+@import url("css/chart.css");
+
+#chart {
+	flex: 1;
+}
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<header>
+			<a href="status.html">Close</a>
+			<h1 id="host">resource[host]</h1>
+			<div id="legend">legend</div>
+		</header>
+		
+		<iframe id="chart" class="chart"></iframe>
+		
+		<iframe id="cursor"></iframe>
+		
+		<script src="js/ITAhM.js"></script>
+		<script>
+
+if (parent === window) throw "";		
+
+var deviceIP = top.databases.device.selected,
+	resourceIndex = top.databases.device.resourceIndex,
+	snmp = top.databases.snmp;
+
+(function (date) {
+	date.setHours(0, 0, 0, 0);
+	
+	window.today = date.getTime();
+	window.end = date.setDate(date.getDate() +1);
+	window.start = date.setMonth(date.getMonth() -1);
+})(new Date());
+
+(function () {
+	var chart = document.getElementById("chart");
+	
+	chart.onload = function () {
+		var chartWindow = this.contentWindow;
+		
+		chartWindow.setHeader = function (host, legend) {
+			document.getElementById("host").textContent = host +" ["+ deviceIP +"]";
+			document.getElementById("legend").textContent = legend;
+		};
+		
+		chartWindow.initialize();
+	};
+	
+	chart.src = "chart_"+ top.databases.device.selectedResource +".html";
+}) ();
+
+(function () {
+	var cursor = document.getElementById("cursor");
+
+	cursor.onload = function () {
+		var cursorWindow = cursor.contentWindow;
+		
+		cursorWindow.onResetDate = onResetDate;
+		
+		cursorWindow.initialize(window.start, window.end, window.end, window.today);
+	}
+	
+	cursor.src = "date_cursor.html";
+}) ();
+
+function onResetDate(start, end) {
+	chart.contentWindow.onResetDate(start.getTime(), end.getTime());
+}
+
+function onSelectDevice(ip) {
+	var device = top.databases.device.data[ip];
+	
+	if (device.snmp) {
+		top.databases.device.selected = ip;
+		
+		location.reload();
+	}
+	else {
+		alert("SNMP is not enabled for "+ ip);
+	}
+}
+
+		</script>
+	
+	</body>
+	
+</html>
